@@ -1,0 +1,167 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Low-latency finite duration acquisition</title><meta name="generator" content="MATLAB 9.0"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2016-08-17"><meta name="DC.source" content="low_latency_finite_acquisition_example.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Low-latency finite duration acquisition</h1><!--introduction--><p>This example shows how to do low-latency finite duration acquisition using the (undocumented) MEX "projection layer" for NI-DAQmx driver, available in Data Acquisition Toolbox R2014b.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Requires attached MATLAB functions (wrappers for NI-DAQmx driver functions)</a></li><li><a href="#2">Session configuration</a></li><li><a href="#3">Finite duration acquisition</a></li><li><a href="#4">Process and display data</a></li><li><a href="#5">Clean up</a></li></ul></div><h2>Requires attached MATLAB functions (wrappers for NI-DAQmx driver functions)<a name="1"></a></h2><div><ul><li>NI_DAQmxCfgSampClkTiming.m</li><li>NI_DAQmxGetReadNumChans.m</li><li>NI_DAQmxStartTask.m</li><li>NI_DAQmxStopTask.m</li><li>NI_DAQmxReadAnalogF64.m</li></ul></div><h2>Session configuration<a name="2"></a></h2><pre class="codeinput">s = daq.createSession(<span class="string">'ni'</span>);
+aiCh(1) = s.addAnalogInputChannel(<span class="string">'Dev7'</span>, <span class="string">'ai0'</span>, <span class="string">'Voltage'</span>);
+aiCh(2) = s.addAnalogInputChannel(<span class="string">'Dev7'</span>, <span class="string">'ai1'</span>, <span class="string">'Voltage'</span>);
+aiCh(1).Range = [-10 10];
+aiCh(2).Range = [-10 10];
+
+<span class="comment">% Set session rate and acquisition duration</span>
+s.Rate = 1E+5;
+s.DurationInSeconds = 2;
+
+<span class="comment">% TaskHandle property is available (undocumented) in MATLAB R2014b.</span>
+<span class="comment">% Assuming all analog input channels belong to the same NI-DAQmx task</span>
+aiTaskHandle = aiCh(1).TaskHandle;
+</pre><h2>Finite duration acquisition<a name="3"></a></h2><pre class="codeinput"><span class="comment">% Past this line, do not modify session configuration or properties,</span>
+<span class="comment">% and do not execute prepare(s), startForeground(s), startBackground(s)</span>
+
+<span class="comment">% Configure finite duration acquisition (rate, number of scans)</span>
+NI_DAQmxCfgSampClkTiming(aiTaskHandle, s.Rate, s.NumberOfScans);
+
+tic
+
+<span class="comment">% Perform a finite duration acquisition operation</span>
+NI_DAQmxStartTask(aiTaskHandle);
+inputData = NI_DAQmxReadAnalogF64(aiTaskHandle, s.NumberOfScans, 10);
+NI_DAQmxStopTask(aiTaskHandle);
+
+toc
+</pre><pre class="codeoutput">Elapsed time is 2.037846 seconds.
+</pre><h2>Process and display data<a name="4"></a></h2><pre class="codeinput"><span class="comment">% If data grouped by channel in 1D array, reshape data array to 2D</span>
+numChannels = NI_DAQmxGetReadNumChans(aiTaskHandle);
+inputData = reshape(inputData, [], numChannels);
+
+figure;
+plot(inputData);
+</pre><img vspace="5" hspace="5" src="low_latency_finite_acquisition_example_01.png" alt=""> <h2>Clean up<a name="5"></a></h2><pre class="codeinput">delete(s)
+clear <span class="string">s</span>
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2016a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Low-latency finite duration acquisition
+% This example shows how to do low-latency finite duration acquisition
+% using the (undocumented) MEX "projection layer" for NI-DAQmx driver, 
+% available in Data Acquisition Toolbox R2014b.
+
+%% Requires attached MATLAB functions (wrappers for NI-DAQmx driver functions)
+% 
+% * NI_DAQmxCfgSampClkTiming.m
+% * NI_DAQmxGetReadNumChans.m
+% * NI_DAQmxStartTask.m
+% * NI_DAQmxStopTask.m
+% * NI_DAQmxReadAnalogF64.m
+
+%% Session configuration
+s = daq.createSession('ni');
+aiCh(1) = s.addAnalogInputChannel('Dev7', 'ai0', 'Voltage');
+aiCh(2) = s.addAnalogInputChannel('Dev7', 'ai1', 'Voltage');
+aiCh(1).Range = [-10 10];
+aiCh(2).Range = [-10 10];
+
+% Set session rate and acquisition duration
+s.Rate = 1E+5;
+s.DurationInSeconds = 2;
+
+% TaskHandle property is available (undocumented) in MATLAB R2014b.
+% Assuming all analog input channels belong to the same NI-DAQmx task
+aiTaskHandle = aiCh(1).TaskHandle;
+
+%% Finite duration acquisition
+
+% Past this line, do not modify session configuration or properties,
+% and do not execute prepare(s), startForeground(s), startBackground(s)
+
+% Configure finite duration acquisition (rate, number of scans)
+NI_DAQmxCfgSampClkTiming(aiTaskHandle, s.Rate, s.NumberOfScans);
+
+tic
+
+% Perform a finite duration acquisition operation
+NI_DAQmxStartTask(aiTaskHandle);
+inputData = NI_DAQmxReadAnalogF64(aiTaskHandle, s.NumberOfScans, 10);
+NI_DAQmxStopTask(aiTaskHandle);
+
+toc
+%% Process and display data
+
+% If data grouped by channel in 1D array, reshape data array to 2D
+numChannels = NI_DAQmxGetReadNumChans(aiTaskHandle);
+inputData = reshape(inputData, [], numChannels);
+
+figure;
+plot(inputData);
+
+%% Clean up
+
+delete(s)
+clear s
+
+
+##### SOURCE END #####
+--></body></html>

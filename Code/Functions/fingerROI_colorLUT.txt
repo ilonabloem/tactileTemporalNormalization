@@ -1,0 +1,8 @@
+#$Id: FreeSurferColorLUT.txt,v 1.105 2015/07/29 18:23:03 greve Exp $
+#No. Label Name:                            	R   G   B   A
+0   Unknown					0   0   0   0
+1   thumb 					62   38  168 0
+2   index                                   	52  122  253  0
+3   middle                                     	18  190  185 0
+4   ring                                     	200  193  41  0
+5   little                                    	249  251  21 0
