@@ -1,14 +1,15 @@
-function allResults = loadResultsfMRI(projectName)
+function allResults = loadResultsfMRI(projectName, models)
 
 if ~exist('projectName', 'var') || isempty(projectName)
     projectName = 'tactileTemporalNormalization';
 end
-
+if ~exist('models', 'var') || isempty(models)
+    models      = {'NORM', 'HRF'}; %{'NORM', 'HRF', 'TTC'};
+end
 %% Set up parameters
 %-- Experimental details
 savestr         = 'bads';
 modelStr        = 'modelOutput_fMRI';
-models          = {'NORM', 'HRF'}; %{'NORM', 'HRF'};
 
 ROInames        = {'localizerROI-S1'};
 numROIs         = length(ROInames);
@@ -37,10 +38,10 @@ for wModel = 1:numel(models)
     resultsDir      = fullfile(dataRootDir, modelStr, model);
 
     %-- Results file names (bootstrapped, avg fits, and cross val R2)
-    fileNames       = dir(fullfile(resultsDir, sprintf('sub-%s_%s_model-%s_crossval-*_optimizer-%s_*%s.mat', subject, ROInames{1}, model, savestr, modelStr)));
+    fileNames       = dir(fullfile(resultsDir, sprintf('sub-%s_%s_model-%s_crossval-*_optimizer-*_*%s.mat', subject, ROInames{1}, model, modelStr)));
 
-    %-- Skip if not all model output files exist
-    if length(fileNames) < 3
+    %-- Skip if model output files don't exist
+    if length(fileNames) < 1
 
         fprintf('[%s] No or not all model results found: skipping %s - %s \n', mfilename, subject, ROInames{1})
         continue

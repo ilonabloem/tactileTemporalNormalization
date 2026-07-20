@@ -27,13 +27,14 @@ out.xbounds     = [out.xvalues(1) out.xvalues(end)] + diff(out.xvalues(1:2)) * [
 
 if nargin > 0
 
-    modelNames      = {'NORM', 'HRF', 'DN', 'LIN'};
+    modelNames      = {'NORM', 'HRF', 'DN', 'LIN', 'TTC'};
 
     % Colors used for the models
     modelColors     =  [0.1540    0.5902    0.9218;
                         0.5044    0.7993    0.3480;
                         0.1540    0.5902    0.9218;
-                        0.5044    0.7993    0.3480;]; %parula(numel(modelNames)+1);
+                        0.5044    0.7993    0.3480;
+                             1    0.4980    0.3137]; %parula(numel(modelNames)+1);
     [~,colorOrder]  = ismember(models, modelNames);
     out.mColors     = modelColors(colorOrder,:);
 
