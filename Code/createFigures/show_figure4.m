@@ -56,7 +56,7 @@ hirf            = normSum(hirf);
 
 %-- figure 
 fig = figure('Color', [1 1 1], 'Position', [30 300 600 290]);
-set(fig,'Units', 'Pixels', 'PaperPositionMode','Auto','PaperUnits','points','PaperSize',[600 180])
+set(fig,'Units', 'Pixels', 'PaperPositionMode','Auto','PaperUnits','points','PaperSize',[600 290])
 
 figlayout       = tiledlayout(3,1);
 HRFlayout       = tiledlayout(figlayout, 1, 5);
@@ -189,7 +189,7 @@ title(HRFlayout, 'Linear model')
 title(NORMlayout, 'Normalization model')
 
 if saveFig > 0
-    print(gcf, fullfile(figDir, sprintf('fig4_fMRI_temporalModels')), '-dpdf')
+    print(fig, fullfile(figDir, sprintf('fig4_fMRI_temporalModels')), '-dpdf')
 end
 
 
