@@ -1,10 +1,11 @@
-function show_figure5(saveFig, figDir)
+function show_figure5(saveFig, figDir, showTTC, figName)
 %
 % Visualizes figure 5 from paper:
 % Group BOLD response time courses and model predictions
 %
 % saveFig:      true or false
 % figDir:       directory where figures are saved
+% showTTC:      if true also show TTC model prediction
 %
 % - Ilona Bloem
 
@@ -17,14 +18,24 @@ if ~exist('figDir', 'var') || isempty(figDir)
     figDir      = fullfile(dataRootDir, '..', 'Figures');
 end
 
+if ~exist('showTTC', 'var') || isempty(showTTC) || false(showTTC)
+    showTTC         = false;
+    models          = {'NORM', 'HRF'}; %{'NORM', 'HRF', 'TTC'};
+else
+    showTTC         = true;
+    models          = {'NORM', 'HRF', 'TTC'};
+end
+if ~exist('figName', 'var') || isempty(figName)
+    figName        = 'fig5';
+end
+
 %-- create folder if it doesn't exists
 if ~exist(figDir, 'dir'), mkdir(figDir); end
 
 %-- load data
 projectName     = 'tactileTemporalNormalization';
 ROInames        = {'localizerROI-S1'};
-models          = {'NORM', 'HRF'}; %{'NORM', 'HRF'};
-allResults      = loadResultsfMRI(projectName);
+allResults      = loadResultsfMRI(projectName, models);
 expInfo         = visualizationSettings(models);
 
 %-- tactile response time courses w/ model predictions
@@ -48,6 +59,9 @@ for ii = 1:expInfo.numCond
 
     plot(allResults.x_data, allResults.NORMpred(ii,:), 'Color', expInfo.mColors(1,:), 'LineWidth', 2)
     plot(allResults.x_data, allResults.HRFpred(ii,:), 'Color', expInfo.mColors(2,:), 'LineWidth', 2)
+    if showTTC > 0
+        plot(allResults.x_data, allResults.TTCpred(ii,:), 'Color', expInfo.mColors(3,:), 'LineWidth', 2)
+    end
 
     if ii <= numel(allResults.onePulseIndx)
         title(sprintf('Dur %.2fs', allResults.stimDur(ii)), 'FontSize', 10)
@@ -63,79 +77,86 @@ end
 % Create figure title
 titleStr    = sprintf('%s %s \n %s{%f %f %f} %smodel crossval R2: %.2f \n', 'group', ROInames{1}, '\color[rgb]', expInfo.mColors(1,:), 'NORM', allResults.NORMcrossR2);
 titleStr    = cat(2, titleStr, sprintf('%s{%f %f %f} %smodel crossval R2: %.2f \n', '\color[rgb]', expInfo.mColors(2,:), 'HRF', allResults.HRFcrossR2));
-
+if showTTC > 0
+    titleStr    = cat(2, titleStr, sprintf('%s{%f %f %f} %smodel crossval R2: %.2f \n', '\color[rgb]', expInfo.mColors(3,:), 'TTC', allResults.TTCcrossR2));
+end
 subplot(2,numel(allResults.onePulseIndx),expInfo.numCond)
 legend(models)
 
-sgtitle(titleStr, 'fontsize', 20)
+sgtitle(titleStr, 'fontsize', 14)
 
 if saveFig > 0
-    print(tcourseFig, fullfile(figDir, sprintf('fig5a_%s_timeCourses_wPred', 'fMRI')), '-dpdf')
+    print(tcourseFig, fullfile(figDir, sprintf('%sa_%s_timeCourses_wPred', figName, 'fMRI')), '-dpdf')
 end
 
-%-- Model parameters
-paramFig        = figure('Color', [1 1 1], 'Position', [30 300 700 250]);
-set(paramFig,'Units', 'Pixels', 'PaperPositionMode','Auto','PaperUnits','points','PaperSize', [700 250])
 
-for wModel = 1:numel(models)
+% don't show if TTC was requested
+if showTTC == 0
 
-    model           = models{wModel};
-    modelSett       = visualizationSettings(models, model);
+    %-- Model parameters
+    paramFig        = figure('Color', [1 1 1], 'Position', [30 300 700 250]);
+    set(paramFig,'Units', 'Pixels', 'PaperPositionMode','Auto','PaperUnits','points','PaperSize', [700 250])
 
-    c = 1;
-    axOrder     = [5 6 1 2 3 4];
-
-    for ii = 1:modelSett.totParams
-
-        subplot(1,6,axOrder(ii))
-
-        % skip plotting if current model does not have this param
-        if strcmp(modelSett.allLabels{ii}, modelSett.mLabels{c})
-
-            hold on,
-            % median with 68 and 95 CI intervals
-            plot(wModel * ones(1,2), allResults.(sprintf('c%sparams95', model))(c,:), 'Color', [0.8 0.8 0.8], 'LineWidth', 3)
-            plot(wModel * ones(1,2), allResults.(sprintf('c%sparams68', model))(c,:), 'Color', modelSett.color, 'LineWidth', 3)
-            scatter(wModel, median(allResults.(sprintf('%sparams', model))(c,:)), 100, modelSett.color, 'filled')
-
-            c = c+1;
-
-        end
-
-        if wModel == numel(models)
-            box off; axis square
-            title(modelSett.labels{ii}, 'Interpreter', 'none')
-            % ensure 2 gammas have same axes
-            if strcmp(modelSett.allLabels{ii}, 'gamma2')
-
-                oldLim = currLim;
-                currLim = get(gca, 'YLim'); currLim = [floor(currLim(1)) ceil(currLim(2))];
-
-                currLim(1) = floor(min(oldLim(1), currLim(1)));
-                currLim(2) = ceil(max(oldLim(2), currLim(2)));
-                subplot(1,6,axOrder(ii-1))
-                ylim(currLim)
-                set(gca, 'xtick', 1:numel(models), 'xticklabel', models, ...
-                    'tickdir', 'out', 'ytick', linspace(currLim(1),currLim(2), 5));
-                subplot(1,6,axOrder(ii))
-                ylim(currLim)
-                set(gca, 'xtick', 1:numel(models), 'xticklabel', models, ...
-                    'tickdir', 'out', 'ytick', linspace(currLim(1),currLim(2), 5));
-            else
-                currLim = get(gca, 'YLim'); currLim =  [floor(currLim(1)*10)/10 ceil(currLim(2)*10)/10];
-                ylim(currLim)
-                set(gca, 'xtick', 1:numel(models), 'xticklabel', models, ...
-                    'tickdir', 'out', 'ytick', linspace(currLim(1),currLim(2), 5));
+    for wModel = 1:numel(models)
+    
+        model           = models{wModel};
+        modelSett       = visualizationSettings(models, model);
+    
+        c = 1;
+        axOrder     = [5 6 1 2 3 4];
+    
+        for ii = 1:modelSett.totParams
+    
+            subplot(1,6,axOrder(ii))
+    
+            % skip plotting if current model does not have this param
+            if strcmp(modelSett.allLabels{ii}, modelSett.mLabels{c})
+    
+                hold on,
+                % median with 68 and 95 CI intervals
+                plot(wModel * ones(1,2), allResults.(sprintf('c%sparams95', model))(c,:), 'Color', [0.8 0.8 0.8], 'LineWidth', 3)
+                plot(wModel * ones(1,2), allResults.(sprintf('c%sparams68', model))(c,:), 'Color', modelSett.color, 'LineWidth', 3)
+                scatter(wModel, median(allResults.(sprintf('%sparams', model))(c,:)), 100, modelSett.color, 'filled')
+    
+                c = c+1;
+    
             end
-            %                 ylim([modelSett.mBounds(1,ii) currLim(2)])
-            xlim([0 numel(models)+1])
-
+    
+            if wModel == numel(models)
+                box off; axis square
+                title(modelSett.labels{ii}, 'Interpreter', 'none')
+                % ensure 2 gammas have same axes
+                if strcmp(modelSett.allLabels{ii}, 'gamma2')
+    
+                    oldLim = currLim;
+                    currLim = get(gca, 'YLim'); currLim = [floor(currLim(1)) ceil(currLim(2))];
+    
+                    currLim(1) = floor(min(oldLim(1), currLim(1)));
+                    currLim(2) = ceil(max(oldLim(2), currLim(2)));
+                    subplot(1,6,axOrder(ii-1))
+                    ylim(currLim)
+                    set(gca, 'xtick', 1:numel(models), 'xticklabel', models, ...
+                        'tickdir', 'out', 'ytick', linspace(currLim(1),currLim(2), 5));
+                    subplot(1,6,axOrder(ii))
+                    ylim(currLim)
+                    set(gca, 'xtick', 1:numel(models), 'xticklabel', models, ...
+                        'tickdir', 'out', 'ytick', linspace(currLim(1),currLim(2), 5));
+                else
+                    currLim = get(gca, 'YLim'); currLim =  [floor(currLim(1)*10)/10 ceil(currLim(2)*10)/10];
+                    ylim(currLim)
+                    set(gca, 'xtick', 1:numel(models), 'xticklabel', models, ...
+                        'tickdir', 'out', 'ytick', linspace(currLim(1),currLim(2), 5));
+                end
+                %                 ylim([modelSett.mBounds(1,ii) currLim(2)])
+                xlim([0 numel(models)+1])
+    
+            end
         end
+    
+    
     end
-
-
-end
-
-if saveFig > 0
-    print(tcourseFig, fullfile(figDir, sprintf('fig5b_%s_modelParams', 'fMRI')), '-dpdf')
+    
+    if saveFig > 0
+        print(tcourseFig, fullfile(figDir, sprintf('%sb_%s_modelParams', figName, 'fMRI')), '-dpdf')
+    end
 end

@@ -46,8 +46,7 @@ condOrder=fixedP.ConditionNames; currModelName='fitTTCmodel_IEEG'; doCrossFlag=f
 resultsDir=fullfile(dataRootDir,resultsstr,model);
 if ~exist(resultsDir,'dir'), mkdir(resultsDir); end
 save(fullfile(resultsDir, sprintf('sub-group_model-TTC_crossval-noCross_optimizer-%s_%s.mat',savestr,resultsstr)), ...
-    'x_data','y_data','y_est','R2','params','condOrder','model','currModelName','doCrossFlag','stim_info','stim_ts','t');
-
+    'x_data','y_data','y_est','R2','params','condOrder','model','currModelName','currModel','doCrossFlag','stim_info','stim_ts','t');
 fprintf('[fit_TTC_iEEG] weight=%.3f shift=%.3f scale=%.3f  direct-fit R2=%.3f\n', params(1),params(2),params(3),R2);
 
 % --- optional cross-validation ---
@@ -69,7 +68,7 @@ if doCross
     R2cv=1-sum((tmp_ydata(:)-yCV(:)).^2)/sum((tmp_ydata(:)-mean(tmp_ydata(:))).^2);
     y_est=yCV; y_data=tmp_ydata; R2=R2cv; doCrossFlag=true;
     save(fullfile(resultsDir, sprintf('sub-group_model-TTC_crossval-withCross_optimizer-%s_%s.mat',savestr,resultsstr)), ...
-        'x_data','y_data','y_est','R2','params','condOrder','model','currModelName','doCrossFlag','stim_info','stim_ts','t');
+        'x_data','y_data','y_est','R2','params','condOrder','model','currModelName','currModel','doCrossFlag','stim_info','stim_ts','t');
     fprintf('[fit_TTC_iEEG] cross-val R2=%.3f\n', R2cv);
 end
 

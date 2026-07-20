@@ -1,8 +1,11 @@
 
-function results = loadResultsIEEG(projectName)
+function results = loadResultsIEEG(projectName, models)
 
 if ~exist('projectName', 'var') || isempty(projectName)
     projectName = 'tactileTemporalNormalization';
+end
+if ~exist('models', 'var') || isempty(models)
+    models      = {'DN', 'LIN'}; %{'DN', 'LIN', 'TTC'};
 end
 
 %-- Set up paths
@@ -13,7 +16,6 @@ if ~exist(fullfile(figDir), 'dir'), mkdir(fullfile(figDir)); end
 
 % Settings
 subjNames       = {'sub-group'};
-models          = {'DN', 'LIN'};
 resultsstr      = 'modelOutput_iEEG';
 
 %% Load data and modelfits for each model, with and without cross-validation
@@ -39,7 +41,7 @@ for mm = 1:numel(models)
     fileNames       = dir(fullfile(resultsDir, sprintf('%s_model-%s_crossval-*_optimizer-*_*%s.mat', subjNames{1}, model, resultsstr)));
 
     %-- Skip if not all model output files exist
-    if length(fileNames) < 3
+    if length(fileNames) < 1
 
         fprintf('[%s] No or not all model results found: skipping %s modelOutput \n', mfilename, subjNames{1})
         continue

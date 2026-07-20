@@ -8,8 +8,12 @@ function out = fit_TTC_fMRI(doCross)
 if nargin<1 || isempty(doCross), doCross=false; end
 
 projectName = 'tactileTemporalNormalization';
-model = 'TTC'; savestr = 'fmincon'; resultsstr = 'modelOutput_fMRI';
-ROIname = {'localizerROI','S1'};
+model       = 'TTC'; 
+savestr     = 'fmincon'; 
+resultsstr  = 'modelOutput_fMRI';
+ROIname     = {'localizerROI','S1'};
+ROIname     = sprintf('%s-%s', ROIname{:,1}, ROIname{:,2});
+subject     = 'group';
 
 here = fileparts(mfilename('fullpath'));
 addpath(genpath(fileparts(fileparts(here))));   % add repo Code tree (Models, Functions, ...)
@@ -33,7 +37,7 @@ fixedP.hrfParams = allR.HRFparams(2:4)';   % [gamma1 gamma2 gamma2_gain]
 
 % group-average data
 S = load(fullfile(dataRootDir,'avgTimeSeries', ...
-    sprintf('sub-%s_%s-%s_avgTimeSeries.mat','group',ROIname{:})));
+    sprintf('sub-%s_%s_avgTimeSeries.mat',subject,ROIname)));
 x_data = S.x_data; fixedP.x_data = x_data;
 Data   = mean(S.allBetas,3);
 tmp_ydata = Data([fixedP.onePulseIndx; fixedP.twoPulseIndx], :)';   % tp x cond
@@ -49,9 +53,9 @@ condOrder = fixedP.ConditionNames;
 
 resultsDir = fullfile(dataRootDir, resultsstr, model);
 if ~exist(resultsDir,'dir'), mkdir(resultsDir); end
-y_est = yhat; y_data = tmp_ydata; currModelName='fitTTCmodel'; doCrossFlag=false;
-save(fullfile(resultsDir, sprintf('sub-group_%s-%s_model-TTC_crossval-noCross_optimizer-%s_%s.mat',ROIname{:},savestr,resultsstr)), ...
-    'x_data','y_data','y_est','R2','params','condOrder','model','currModelName','doCrossFlag','savestr');
+y_est = yhat; y_data = tmp_ydata; currModelName='fitTTCmodel'; doCrossFlag=false; currModel = str2func(currModelName); hrfParams = fixedP.hrfParams;
+save(fullfile(resultsDir, sprintf('sub-group_%s_model-TTC_crossval-noCross_optimizer-%s_%s.mat',ROIname,savestr,resultsstr)), ...
+    'subject','x_data','y_data','y_est','R2','params','condOrder','model','currModelName','currModel','ROIname','hrfParams','doCrossFlag','savestr');
 
 fprintf('[fit_TTC_fMRI] weight=%.3f gain=%.3f  direct-fit R2=%.3f\n', w, g, R2);
 
@@ -66,8 +70,8 @@ if doCross
     end
     R2cv = 1 - sum((tmp_ydata(:)-yCV(:)).^2)/sum((tmp_ydata(:)-mean(tmp_ydata(:))).^2);
     y_est=yCV; y_data=tmp_ydata; R2=R2cv; doCrossFlag=true;
-    save(fullfile(resultsDir, sprintf('sub-group_%s-%s_model-TTC_crossval-withCross_optimizer-%s_%s.mat',ROIname{:},savestr,resultsstr)), ...
-        'x_data','y_data','y_est','R2','params','condOrder','model','currModelName','doCrossFlag','savestr');
+    save(fullfile(resultsDir, sprintf('sub-group_%s_model-TTC_crossval-withCross_optimizer-%s_%s.mat',ROIname,savestr,resultsstr)), ...
+        'subject','x_data','y_data','y_est','R2','params','condOrder','model','currModelName','currModel','ROIname','hrfParams','doCrossFlag','savestr');
     fprintf('[fit_TTC_fMRI] cross-val R2=%.3f\n', R2cv);
 end
 

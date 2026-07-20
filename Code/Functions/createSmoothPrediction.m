@@ -32,6 +32,7 @@ twoPulseNames       = strrep('TWO-PULSE-%s','%s', cellstr(string((1:opt.numCondi
 opt.ConditionNames  = cat(1, onePulseNames, twoPulseNames); 
 
 %-- create prediction
+
 pred                = currModel(params, opt); 
 
 out.pred            = pred';

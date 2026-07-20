@@ -1,6 +1,6 @@
-function supplementaryFigures_iEEG(saveFig, figDir)
+function show_supplementaryFigures12(saveFig, figDir)
 %
-% Visualizes supplementary figures from paper:
+% Visualizes supplementary figures 1 & 2 from paper:
 % Compare visual and tactile results
 %
 % saveFig:      true or false
@@ -29,7 +29,6 @@ if ~exist(figDir, 'dir'), mkdir(figDir); end
 %% Supplement Figure 1. Plot time series with DN prediction
 model           = 'DN';
 modelSett       = visualizationSettings(model, model);
-saveFig         = true;
 
 %% Load visual data and bootstrap parameter estimates 
 % Load individual electrode fits from visual iEEG study
@@ -154,7 +153,7 @@ for ii = 1:n_two
 end
 
 if saveFig > 0
-    print(tcourseFig, fullfile(figDir, sprintf('suppFig_iEEG_visual_timeCourses_wPred')), '-dpdf', '-vector');
+    print(tcourseFig, fullfile(figDir, sprintf('suppFig1_iEEG_visual_timeCourses_wPred')), '-dpdf', '-vector');
 end
 
 %% Plot parameter estimates
@@ -203,7 +202,7 @@ end
 
 % Save figures
 if saveFig > 0
-    saveas(paramFig, fullfile(figDir, sprintf('suppFig_iEEG_visual-VS-tactile_%s-parameters', model)), 'pdf');
+    saveas(paramFig, fullfile(figDir, sprintf('suppFig2_iEEG_visual-VS-tactile_%s-parameters', model)), 'pdf');
 end
 
 
