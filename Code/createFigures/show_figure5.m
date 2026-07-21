@@ -95,7 +95,7 @@ if showTTC == 0
 
     %-- Model parameters
     paramFig        = figure('Color', [1 1 1], 'Position', [30 300 700 250]);
-    set(paramFig,'Units', 'Pixels', 'PaperPositionMode','Auto','PaperUnits','points','PaperSize', [700 250])
+    set(paramFig,'Units', 'Pixels', 'PaperPositionMode','Auto','PaperUnits','points','PaperSize', [700 280])
 
     for wModel = 1:numel(models)
     
@@ -157,6 +157,6 @@ if showTTC == 0
     end
     
     if saveFig > 0
-        print(tcourseFig, fullfile(figDir, sprintf('%sb_%s_modelParams', figName, 'fMRI')), '-dpdf')
+        print(paramFig, fullfile(figDir, sprintf('%sb_%s_modelParams', figName, 'fMRI')), '-dpdf')
     end
 end
